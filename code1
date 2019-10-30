@@ -1,0 +1,103 @@
+resource "aws_security_group" "global-test" {
+  name = "global-test"
+  description = "global rule"
+
+  ingress {
+    from_port = 0
+    to_port = 65535
+    protocol = "tcp"
+    cidr_blocks = ["11.22.33.44/32", "22.33.44.55/32", "33.44.55.66/32"]
+  }
+
+  ingress {
+    from_port = 0
+    to_port = 65535
+    protocol = "tcp"
+    cidr_blocks = ["44.55.66.77/32"]
+  }
+
+  ingress {
+    from_port = 0
+    to_port = 65535
+    protocol = "tcp"
+    cidr_blocks = ["55.66.77.88/32", "66.77.88.99/32"]
+  }
+
+}
+
+[10:38 am, 11/08/2019] Pradeep Trainer: 
+
+{
+  "variables": {
+    "aws_access_key": "",
+    "aws_secret_key": ""
+  },
+
+  "builders": [{
+    "type": "amazon-ebs",
+    "access_key": "{{user `aws_access_key`}}",
+    "secret_key": "{{user `aws_secret_key`}}",
+    "region": "us-east-2",
+    "source_ami": "ami-0520e698dd500b1d1",
+    "instance_type": "t2.micro",
+    "ssh_username": "ec2-user",
+    "ami_name": "packer-http-{{timestamp}}"
+  }
+],
+
+  "provisioners": [
+  {
+    "type": "shell",
+    "script": "http-script.sh"
+  }
+  ]
+}
+
+
+[10:38 am, 11/08/2019] Pradeep Trainer: 
+
+#!/bin/bash
+sudo yum -y update
+sudo yum install -y httpd unzip wget
+sudo echo "TEST PACKER WEB SITE" >> /var/www/html/index.html
+sudo systemctl enable httpd
+
+
+[11:24 am, 11/08/2019] +91 97313 33882: 
+resource "aws_instance" "test-inst" {
+  instance_type = "${var.instance_type}"
+  ami           = "${var.ami}"
+  count         = "${var.count_instance}"
+# vpc_id        = "${var.vpcid}" # Not required, subnet id will pick vpc_id
+  subnet_id     = "${var.subnet_id}"
+  vpc_security_group_ids = ["${aws_security_group.allow_tls.id}"]
+  associate_public_ip_address = "${var.associate_public_ip_address}"
+depends_on = [aws_security_group.allow_tls]
+}
+
+resource "aws_security_group" "allow_tls" {
+  name        = "allow_tls"
+  description = "Allow TLS inbound traffic"
+
+
+  ingress {
+    # TLS (change to whatever ports you need)
+    from_port   = "443"
+    to_port     = "443"
+protocol = "tcp"
+}
+
+ingress {
+    # TLS (change to whatever ports you need)
+    from_port   = "22"
+    to_port     = "22"
+protocol = "tcp"
+}
+
+
+  egress {
+    from_port       = "0"
+    to_port         = "0"
+protocol = "-1"
+  }
+}

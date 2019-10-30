@@ -1,0 +1,59 @@
+ sandvenk-mac:http_ansible_new sandvenk$ cat http_playbook.yml
+---
+- name: HTTP deployment playbook
+  hosts: "localhost"
+  remote_user: ec2-user
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+  tasks:
+  - name: ensure apache is at the latest version
+    yum:
+      name: httpd
+      state: latest
+  - name: ensure apache is running
+    service:
+      name: httpd
+      state: started
+sandvenk-mac:http_ansible_new sandvenk$
+ sandvenk-mac:http_ansible_new sandvenk$ cat prov_ansible_http.sh 
+#!/bin/bash
+#sudo yum -y update
+sudo yum install -y httpd unzip wget
+sudo dnf -y install python3-pip
+sudo pip3 install --upgrade pip
+pip3 install ansible --user
+echo "Running build."
+sandvenk-mac:http_ansible_new sandvenk$
+
+ sandvenk-mac:http_ansible_new sandvenk$ cat prov_ami.json 
+{
+  "variables": {
+    "aws_access_key": "xxx",
+    "aws_secret_key": "xxx"
+  },
+
+  "builders": [{
+    "type": "amazon-ebs",
+    "access_key": "{{user `aws_access_key`}}",
+    "secret_key": "{{user `aws_secret_key`}}",
+    "region": "us-east-2",
+    "source_ami": "ami-0520e698dd500b1d1",
+    "instance_type": "t2.micro",
+    "ssh_username": "ec2-user",
+    "ami_name": "packer-http-{{timestamp}}"
+  }
+],
+
+  "provisioners": [
+   {
+    "type": "shell",
+    "script": "prov_ansible_http.sh"
+    },
+    { "type": "ansible-local",
+    "playbook_file": "/Users/sandvenk/Documents/AWS/Packer/http_ansible_new/http_playbook.yml"
+  }
+  ]
+}
+
+sandvenk-mac:http_ansible_new sandvenk$

@@ -1,0 +1,9 @@
+sudo su -
+yum  install wget java
+wget mirrors.jenkins.io/war-stable/latest/jenkins.war
+ls
+java -jar jenkins.war
+\
+
+
+https://medium.com/@mohan08p/install-and-configure-jenkins-on-amazon-ami-8617f0816444
